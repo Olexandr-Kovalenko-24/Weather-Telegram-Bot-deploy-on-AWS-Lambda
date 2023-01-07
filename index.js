@@ -1,3 +1,4 @@
+const axios = require('axios');
 const TelegramApi = require('node-telegram-bot-api');
 const token = '5926403640:AAEFrUMbmqs-Vl-v_j_C85i9F8tuK-z2SoQ';
 
@@ -24,30 +25,36 @@ const start = () => {
             return bot.sendMessage(chatId, 'Welcome to the weather bot :)')
         }
         if (text === '/info') {
-            return bot.sendMessage(chatId, `Your name is ${msg.from.first_name}`)
+            return bot.sendMessage(chatId, `This bot help you get the current weather ${msg.from.first_name}`)
         }
 
-        fetch(`${API_BASE}?q=${text}&appid=${API_KEY}&units=metric`)
-            .then(response => { return response.json() })
-            .then(weatherData => {
-                let temp = Math.round(weatherData.main.temp_min)
-                let pressure = Math.round(weatherData.main.pressure / 1.333)
-                let rise = new Date(parseInt(weatherData.sys.sunrise) * 1000);
-                let set = new Date(parseInt(weatherData.sys.sunset) * 1000);
+        try {
 
-                return bot.sendMessage(chatId, '**** '
-                    + weatherData.name + ' ****\nTemperature: '
-                    + String(temp) + '°C\nHumidity: ' +
-                    weatherData.main.humidity + ' %\nWeather: '
-                    + weatherData.weather[0].description +
-                    '\nPressure: ' + String(pressure)
-                    + ' mmhg\nSunrise: ' +
-                    rise.toLocaleTimeString() +
-                    ' \nSunset: ' +
-                    set.toLocaleTimeString() +
-                    '\nCountry: ' + weatherData.sys.country)
-            });
+            const { data: weatherData } = await axios.get(`${API_BASE}?q=${text}&appid=${API_KEY}&units=metric`);
+
+            let time = new Date(weatherData.dt * 1000);
+            let temp = Math.round(weatherData.main.temp_min);
+            let pressure = Math.round(weatherData.main.pressure / 1.333);
+            let rise = new Date(parseInt(weatherData.sys.sunrise) * 1000);
+            let set = new Date(parseInt(weatherData.sys.sunset) * 1000);
+
+            return bot.sendMessage(chatId, '**** '
+                + weatherData.name + ' ****\nTemperature: '
+                + String(temp) + '°C\nHumidity: ' +
+                weatherData.main.humidity + ' %\nWeather: '
+                + weatherData.weather[0].description +
+                '\nPressure: ' + String(pressure)
+                + ' mmhg\nSunrise: ' +
+                rise.toLocaleTimeString() +
+                ' \nSunset: ' +
+                set.toLocaleTimeString() +
+                '\nCountry: ' + weatherData.sys.country
+                + '\nTime: ' + time)
+        } catch (error) {
+            return bot.sendMessage(chatId, 'I don`t understand. Please write your city one more time')
+        }
     })
 }
 
 start();
+

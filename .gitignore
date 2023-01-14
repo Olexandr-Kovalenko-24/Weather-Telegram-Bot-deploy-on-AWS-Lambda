@@ -1,3 +1,5 @@
 .*
 !.gitignore
+nodejs.zip
+nodejs
 /node_modules
